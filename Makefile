@@ -67,4 +67,19 @@ watch:
 	    fi; \
 	fi
 
-.PHONY: all build run test clean
+createdb:
+	PGPASSWORD=password psql -h localhost -U postgres -c "CREATE DATABASE todo;"
+
+dropdb:
+	PGPASSWORD=password psql -h localhost -U postgres -c "DROP DATABASE todo;"
+
+migrateup:
+	migrate -path internal/db/migration -database "postgresql://postgres:password@localhost:5432/todo?sslmode=disable" -verbose up
+
+migratedown:
+	migrate -path internal/db/migration -database "postgresql://postgres:password@localhost:5432/todo?sslmode=disable" -verbose down
+
+sqlc:
+	sqlc generate
+
+.PHONY: all build run test clean createdb dropdb migrateup migratedown sqlc docker-run docker-down itest watch

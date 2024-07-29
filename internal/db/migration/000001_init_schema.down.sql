@@ -1,0 +1,1 @@
+DROP DATABSE IF EXISTS todo;
