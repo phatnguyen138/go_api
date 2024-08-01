@@ -12,6 +12,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("/", s.HelloWorldHandler)
 
 	mux.HandleFunc("/health", s.healthHandler)
+	mux.HandleFunc("GET /todo", s.ListTodoHanlder)
 
 	return mux
 }
@@ -29,10 +30,14 @@ func (s *Server) HelloWorldHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
-	jsonResp, err := json.Marshal(s.db.Health())
+	health_check := map[string]string{
+		"Health": "Okay",
+	}
+
+	jsonResp, err := json.Marshal(health_check)
 
 	if err != nil {
-		log.Fatalf("error handling JSON marshal. Err: %v", err)
+		panic(err)
 	}
 
 	_, _ = w.Write(jsonResp)

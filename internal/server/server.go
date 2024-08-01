@@ -1,29 +1,47 @@
 package server
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
 
+	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "github.com/joho/godotenv/autoload"
 
-	"github.com/phatnguyen138/go_api/internal/database"
+	db "github.com/phatnguyen138/go_api/internal/db/sqlc"
+)
+
+var (
+	db_name  = os.Getenv("DB_DATABASE")
+	password = os.Getenv("DB_PASSWORD")
+	username = os.Getenv("DB_USERNAME")
+	db_port  = os.Getenv("DB_PORT")
+	host     = os.Getenv("DB_HOST")
+	schema   = os.Getenv("DB_SCHEMA")
 )
 
 type Server struct {
 	port int
 
-	db database.Service
+	query *db.Queries
 }
 
 func NewServer() *http.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
-	NewServer := &Server{
-		port: port,
+	connStr := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&search_path=%s", username, password, host, db_port, db_name, schema)
+	database, err := sql.Open("pgx", connStr)
 
-		db: database.New(),
+	if err != nil {
+		panic(err)
+	}
+
+	db_cnn := db.New(database)
+	NewServer := &Server{
+		port:  port,
+		query: db_cnn,
 	}
 
 	// Declare Server config
