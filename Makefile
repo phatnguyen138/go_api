@@ -1,4 +1,8 @@
 # Simple Makefile for a Go project
+ifneq (,$(wildcard ./.env))
+    include .env
+    export
+endif
 
 # Build the application
 all: build
@@ -68,16 +72,16 @@ watch:
 	fi
 
 createdb:
-	PGPASSWORD=password psql -h localhost -U postgres -c "CREATE DATABASE todo;"
+	PGPASSWORD=$(DB_PASSWORD) psql -h $(DB_HOST) -U $(DB_USERNAME) -c "CREATE DATABASE $(DB_DATABASE);"
 
 dropdb:
-	PGPASSWORD=password psql -h localhost -U postgres -c "DROP DATABASE todo;"
+	PGPASSWORD=$(DB_PASSWORD) psql -h $(DB_HOST) -U $(DB_USERNAME) -c "DROP DATABASE $(DB_DATABASE);"
 
 migrateup:
-	migrate -path internal/db/migration -database "postgresql://postgres:password@localhost:5432/todo?sslmode=disable" -verbose up
+	migrate -path internal/db/migration -database "postgresql://$(DB_USERNAME):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_DATABASE)?sslmode=disable" -verbose up
 
 migratedown:
-	migrate -path internal/db/migration -database "postgresql://postgres:password@localhost:5432/todo?sslmode=disable" -verbose down
+	migrate -path internal/db/migration -database "postgresql://$(DB_USERNAME):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_DATABASE)?sslmode=disable" -verbose down
 
 sqlc:
 	sqlc generate

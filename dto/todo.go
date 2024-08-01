@@ -1,4 +1,4 @@
-package model
+package dto
 
 type TodoResponse struct {
 	Title       string `json:"title"`
@@ -10,5 +10,4 @@ type CreateTodoRequest struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	DueDate     string `json:"due_date,omitempty"`
-	Priority    int    `json:"priority,omitempty"`
 }

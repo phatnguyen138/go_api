@@ -12,7 +12,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	mux.HandleFunc("/", s.HelloWorldHandler)
 
 	mux.HandleFunc("/health", s.healthHandler)
-	mux.HandleFunc("GET /todo", s.ListTodoHanlder)
+	mux.HandleFunc("GET /todos", s.ListTodoHandlder)
+	mux.HandleFunc("GET /todo/", s.GetTodoHandler)
+	mux.HandleFunc("POST /todo", s.CreateTodoHandler)
 
 	return mux
 }
