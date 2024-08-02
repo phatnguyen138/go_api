@@ -35,6 +35,25 @@ func (q *Queries) CreateTodo(ctx context.Context, arg CreateTodoParams) (Todo, e
 	return i, err
 }
 
+const deleteTodo = `-- name: DeleteTodo :one
+DELETE FROM todo
+WHERE id = $1
+RETURNING id, title, description, due_date, completed
+`
+
+func (q *Queries) DeleteTodo(ctx context.Context, id int32) (Todo, error) {
+	row := q.db.QueryRowContext(ctx, deleteTodo, id)
+	var i Todo
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Description,
+		&i.DueDate,
+		&i.Completed,
+	)
+	return i, err
+}
+
 const getTodo = `-- name: GetTodo :one
 SELECT id, title, description, due_date, completed FROM todo
 WHERE id = $1
@@ -55,6 +74,7 @@ func (q *Queries) GetTodo(ctx context.Context, id int32) (Todo, error) {
 
 const listTodos = `-- name: ListTodos :many
 SELECT id, title, description, due_date, completed FROM todo
+ORDER BY id
 LIMIT $1
 OFFSET $2
 `
@@ -91,4 +111,36 @@ func (q *Queries) ListTodos(ctx context.Context, arg ListTodosParams) ([]Todo, e
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateTodo = `-- name: UpdateTodo :one
+UPDATE todo
+SET (title, description, completed) = ($2, $3, $4)
+WHERE id = $1
+RETURNING id, title, description, due_date, completed
+`
+
+type UpdateTodoParams struct {
+	ID          int32
+	Title       string
+	Description sql.NullString
+	Completed   sql.NullBool
+}
+
+func (q *Queries) UpdateTodo(ctx context.Context, arg UpdateTodoParams) (Todo, error) {
+	row := q.db.QueryRowContext(ctx, updateTodo,
+		arg.ID,
+		arg.Title,
+		arg.Description,
+		arg.Completed,
+	)
+	var i Todo
+	err := row.Scan(
+		&i.ID,
+		&i.Title,
+		&i.Description,
+		&i.DueDate,
+		&i.Completed,
+	)
+	return i, err
 }

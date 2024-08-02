@@ -83,6 +83,10 @@ migrateup:
 migratedown:
 	migrate -path internal/db/migration -database "postgresql://$(DB_USERNAME):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_DATABASE)?sslmode=disable" -verbose down
 
+# Make new migration
+migratecreate:
+	migrate create -ext sql -dir internal/db/migration -seq $(name)
+
 sqlc:
 	sqlc generate
 

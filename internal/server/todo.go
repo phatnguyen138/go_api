@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -117,6 +118,107 @@ func (s *Server) CreateTodoHandler(w http.ResponseWriter, r *http.Request){
 
 	if err != nil {
 		http.Error(w,err.Error(),http.StatusBadRequest)
+		return
+	}
+
+	_,_ = w.Write(resp)
+}
+
+func (s *Server) DeleteTodoHanlder (w http.ResponseWriter, r *http.Request) {
+	parts := strings.Split(r.URL.Path, "/")
+
+	if len(parts) != 3 {
+		http.Error(w,"Invlid URL",http.StatusBadRequest)
+	}
+
+	id, err := strconv.Atoi(parts[2])
+
+	if err != nil {
+		http.Error(w,err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	deletedTodo, err := s.query.DeleteTodo(r.Context(),int32(id))
+
+	if err != nil {
+		http.Error(w,err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	resp, err := json.Marshal(utils.ConvertTodoToResponse(deletedTodo))
+
+	if err != nil {
+		http.Error(w,err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	_,_ = w.Write(resp)
+}
+
+func (s *Server) UpdateTodoHandler (w http.ResponseWriter, r *http.Request){
+	var updateTodo dto.UpdateTodoRequest
+	err := json.NewDecoder(r.Body).Decode(&updateTodo)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	todoId, err := strconv.Atoi(updateTodo.Id)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	oldTodo, err := s.query.GetTodo(r.Context(),int32(todoId))
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	newTodo, err := utils.ConvertUpdateTodoToParam(updateTodo)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+    // Update only the fields that are present in the request
+    if updateTodo.Title != "" {
+        oldTodo.Title = newTodo.Title
+	}
+
+    if updateTodo.Description != "" {
+        oldTodo.Description = newTodo.Description
+    }
+
+    if updateTodo.Completed != nil {
+        oldTodo.Completed = newTodo.Completed
+		fmt.Printf("Updated completed")
+    }
+	
+	newTodoParam, err := utils.ConvertTodoToUpdateTodoParam(oldTodo)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	updatedTodo, err := s.query.UpdateTodo(r.Context(), newTodoParam)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	todoResp := utils.ConvertTodoToResponse(updatedTodo)
+
+	resp, err := json.Marshal(todoResp)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

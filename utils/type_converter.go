@@ -11,6 +11,7 @@ import (
 
 func ConvertTodoToResponse(todo db.Todo) dto.TodoResponse {
 	return dto.TodoResponse{
+		Id: strconv.Itoa(int(todo.ID)),
 		Title:       todo.Title,
 		Description: todo.Description.String,
 		Completed:   strconv.FormatBool(todo.Completed.Bool),
@@ -34,6 +35,38 @@ func ConvertCreateTodoToParam(todo dto.CreateTodoRequest) (db.CreateTodoParams,e
 	}
 
 	return resp, nil
+}
+
+func ConvertUpdateTodoToParam(todo dto.UpdateTodoRequest) (db.UpdateTodoParams,error) {
+	id, err := strconv.Atoi(todo.Id)
+
+	if err != nil {
+		println("Wrong id")
+		return db.UpdateTodoParams{}, err
+	}
+
+	resp := db.UpdateTodoParams{
+		ID: int32(id),
+		Title: todo.Title,
+		Description: sql.NullString{
+			String: todo.Description,
+			Valid: true,
+		},
+		Completed: sql.NullBool{
+			Bool: *todo.Completed,
+			Valid: true,
+		},
+	}
+	return resp, nil
+}
+
+func ConvertTodoToUpdateTodoParam (todo db.Todo) (db.UpdateTodoParams, error) {
+	return db.UpdateTodoParams{
+		ID: todo.ID,
+		Title: todo.Title,
+		Description: todo.Description,
+		Completed: todo.Completed,
+	}, nil
 }
 
 func StringToNullTime (s string) (sql.NullTime,error) {
