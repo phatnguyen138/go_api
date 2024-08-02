@@ -1,16 +1,21 @@
 version: '3.8'
 
 services:
-  psql:
-    image: postgres:latest
-    environment:
-      POSTGRES_DB: ${DB_DATABASE}
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+  api:
+    image: go_api
+    container_name: go_api
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "${DB_PORT}:5432"
-    volumes:
-      - psql_volume:/var/lib/postgresql/data
+      - "8081:8080"
+    env_file:
+      - docker.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - go_api
 
-volumes:
-  psql_volume:
+networks:
+  go_api:
+    driver: bridge
