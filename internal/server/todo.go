@@ -57,25 +57,20 @@ func (s *Server) ListTodoHandlder(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(jsonResp)
 }
 
-func (s *Server) GetTodoHandler(w http.ResponseWriter,r *http.Request) {
-	parts := strings.Split(r.URL.Path, "/")
+func (s *Server) GetTodoHandler(w http.ResponseWriter, r *http.Request) {
+	todo_id := r.PathValue("id")
 
-	if len(parts) != 3 {
-		http.Error(w,"Invlid URL",http.StatusBadRequest)
-	}
-
-	id, err := strconv.Atoi(parts[2])
+	id, err := strconv.Atoi(todo_id)
 
 	if err != nil {
-		http.Error(w,err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	todo, err := s.query.GetTodo(r.Context(),int32(id))
-	println(int32(id))
+	todo, err := s.query.GetTodo(r.Context(), int32(id))
 
 	if err != nil {
-		http.Error(w,err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -84,31 +79,31 @@ func (s *Server) GetTodoHandler(w http.ResponseWriter,r *http.Request) {
 	resp, err := json.Marshal(todoResp)
 
 	if err != nil {
-		http.Error(w,"Invavlid todo convert", http.StatusBadRequest)
+		http.Error(w, "Invavlid todo convert", http.StatusBadRequest)
 		return
 	}
 
-	_,_ = w.Write(resp)
+	_, _ = w.Write(resp)
 }
 
-func (s *Server) CreateTodoHandler(w http.ResponseWriter, r *http.Request){
+func (s *Server) CreateTodoHandler(w http.ResponseWriter, r *http.Request) {
 	var todoCreate dto.CreateTodoRequest
 	err := json.NewDecoder(r.Body).Decode(&todoCreate)
-    if err != nil {
-        http.Error(w, err.Error(), http.StatusBadRequest)
-        return
-    }
-
-	todoParam, err := utils.ConvertCreateTodoToParam(todoCreate)
-	
 	if err != nil {
-		http.Error(w,err.Error(),http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	newTodo, err := s.query.CreateTodo(r.Context(),todoParam)
+
+	todoParam, err := utils.ConvertCreateTodoToParam(todoCreate)
 
 	if err != nil {
-		http.Error(w,err.Error(),http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	newTodo, err := s.query.CreateTodo(r.Context(), todoParam)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -117,45 +112,45 @@ func (s *Server) CreateTodoHandler(w http.ResponseWriter, r *http.Request){
 	resp, err := json.Marshal(todoResp)
 
 	if err != nil {
-		http.Error(w,err.Error(),http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	_,_ = w.Write(resp)
+	_, _ = w.Write(resp)
 }
 
-func (s *Server) DeleteTodoHanlder (w http.ResponseWriter, r *http.Request) {
+func (s *Server) DeleteTodoHanlder(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(r.URL.Path, "/")
 
 	if len(parts) != 3 {
-		http.Error(w,"Invlid URL",http.StatusBadRequest)
+		http.Error(w, "Invlid URL", http.StatusBadRequest)
 	}
 
 	id, err := strconv.Atoi(parts[2])
 
 	if err != nil {
-		http.Error(w,err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	deletedTodo, err := s.query.DeleteTodo(r.Context(),int32(id))
+	deletedTodo, err := s.query.DeleteTodo(r.Context(), int32(id))
 
 	if err != nil {
-		http.Error(w,err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	resp, err := json.Marshal(utils.ConvertTodoToResponse(deletedTodo))
 
 	if err != nil {
-		http.Error(w,err.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	_,_ = w.Write(resp)
+	_, _ = w.Write(resp)
 }
 
-func (s *Server) UpdateTodoHandler (w http.ResponseWriter, r *http.Request){
+func (s *Server) UpdateTodoHandler(w http.ResponseWriter, r *http.Request) {
 	var updateTodo dto.UpdateTodoRequest
 	err := json.NewDecoder(r.Body).Decode(&updateTodo)
 
@@ -171,7 +166,7 @@ func (s *Server) UpdateTodoHandler (w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	oldTodo, err := s.query.GetTodo(r.Context(),int32(todoId))
+	oldTodo, err := s.query.GetTodo(r.Context(), int32(todoId))
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -185,20 +180,20 @@ func (s *Server) UpdateTodoHandler (w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-    // Update only the fields that are present in the request
-    if updateTodo.Title != "" {
-        oldTodo.Title = newTodo.Title
+	// Update only the fields that are present in the request
+	if updateTodo.Title != "" {
+		oldTodo.Title = newTodo.Title
 	}
 
-    if updateTodo.Description != "" {
-        oldTodo.Description = newTodo.Description
-    }
+	if updateTodo.Description != "" {
+		oldTodo.Description = newTodo.Description
+	}
 
-    if updateTodo.Completed != nil {
-        oldTodo.Completed = newTodo.Completed
+	if updateTodo.Completed != nil {
+		oldTodo.Completed = newTodo.Completed
 		fmt.Printf("Updated completed")
-    }
-	
+	}
+
 	newTodoParam, err := utils.ConvertTodoToUpdateTodoParam(oldTodo)
 
 	if err != nil {
@@ -222,5 +217,5 @@ func (s *Server) UpdateTodoHandler (w http.ResponseWriter, r *http.Request){
 		return
 	}
 
-	_,_ = w.Write(resp)
+	_, _ = w.Write(resp)
 }
